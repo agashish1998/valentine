@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Be My Valentine?</title>
+
+<style>
+/* ---------- FUNKY ROMANTIC BACKGROUND ---------- */
+body{
+    margin:0;
+    height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:"Comic Sans MS",cursive;
+    overflow:hidden;
+    background: radial-gradient(circle at 20% 20%, #ffd6e8, transparent 40%),
+                radial-gradient(circle at 80% 30%, #ffeaf5, transparent 40%),
+                radial-gradient(circle at 30% 80%, #ffd1f0, transparent 40%),
+                linear-gradient(135deg,#ffd6e8,#ffeaf5);
+    animation:bgMove 12s infinite alternate ease-in-out;
+}
+
+@keyframes bgMove{
+    0%{background-position:0% 0%}
+    100%{background-position:100% 100%}
+}
+
+/* floating hearts */
+.heart{
+    position:fixed;
+    bottom:-40px;
+    font-size:20px;
+    animation:floatUp linear infinite;
+    opacity:.7;
+}
+
+@keyframes floatUp{
+    to{
+        transform:translateY(-110vh) rotate(360deg);
+        opacity:0;
+    }
+}
+
+/* ---------- CARD ---------- */
+.card{
+    background:white;
+    padding:40px 50px 70px;
+    border-radius:30px;
+    text-align:center;
+    box-shadow:0 10px 40px rgba(0,0,0,0.15);
+    position:relative;
+    width:380px;
+    z-index:2;
+}
+
+h1{
+    color:#ff4d88;
+    margin-bottom:35px;
+}
+
+.buttons{
+    position:relative;
+    height:160px;
+}
+
+/* YES */
+#yesBtn{
+    font-size:30px;
+    padding:20px 60px;
+    background:#ff4d88;
+    color:white;
+    border:none;
+    border-radius:60px;
+    cursor:pointer;
+    box-shadow:0 6px 0 #e63c75;
+    transition:transform .15s;
+}
+#yesBtn:active{ transform:scale(.95); }
+
+/* NO */
+#noBtn{
+    position:absolute;
+    font-size:15px;
+    padding:10px 22px;
+    background:#ffe3ee;
+    color:#ff4d88;
+    border:2px solid #ffb3cc;
+    border-radius:30px;
+    cursor:not-allowed;
+    transition:left .35s cubic-bezier(.2,.8,.2,1),
+               top .35s cubic-bezier(.2,.8,.2,1);
+    animation:wiggle 2s infinite ease-in-out;
+}
+
+@keyframes wiggle{
+    0%{transform:rotate(-3deg)}
+    50%{transform:rotate(3deg)}
+    100%{transform:rotate(-3deg)}
+}
+
+canvas{
+    position:fixed;
+    top:0;
+    left:0;
+    pointer-events:none;
+    z-index:3;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+    <h1>Will you be my Valentine? 💌</h1>
+
+    <div class="buttons" id="area">
+        <button id="yesBtn">YES 💖</button>
+        <button id="noBtn">no</button>
+    </div>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<script>
+/* -------- FLOATING HEARTS BACKGROUND -------- */
+function spawnHeart(){
+    const heart=document.createElement("div");
+    heart.className="heart";
+    heart.innerHTML=["💖","💕","💘","💗","💞"][Math.floor(Math.random()*5)];
+    heart.style.left=Math.random()*100+"vw";
+    heart.style.fontSize=(Math.random()*20+14)+"px";
+    heart.style.animationDuration=(Math.random()*6+6)+"s";
+    document.body.appendChild(heart);
+    setTimeout(()=>heart.remove(),12000);
+}
+setInterval(spawnHeart,500);
+
+/* -------- SMOOTH NO BUTTON -------- */
+const noBtn=document.getElementById("noBtn");
+const area=document.getElementById("area");
+let pos={x:230,y:90};
+noBtn.style.left=pos.x+"px";
+noBtn.style.top=pos.y+"px";
+
+area.addEventListener("mousemove",e=>{
+    const rect=noBtn.getBoundingClientRect();
+    const dx=(rect.left+rect.width/2)-e.clientX;
+    const dy=(rect.top+rect.height/2)-e.clientY;
+    const dist=Math.sqrt(dx*dx+dy*dy);
+
+    if(dist<120){
+        const angle=Math.atan2(dy,dx);
+        const move=(120-dist)*0.35;
+        pos.x+=Math.cos(angle)*move;
+        pos.y+=Math.sin(angle)*move;
+
+        const bounds=area.getBoundingClientRect();
+        pos.x=Math.max(0,Math.min(pos.x,bounds.width-rect.width));
+        pos.y=Math.max(0,Math.min(pos.y,bounds.height-rect.height));
+
+        noBtn.style.left=pos.x+"px";
+        noBtn.style.top=pos.y+"px";
+    }
+});
+
+/* -------- CONFETTI -------- */
+const canvas=document.getElementById("confetti");
+const ctx=canvas.getContext("2d");
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+
+let confetti=[];
+function createConfetti(){
+    for(let i=0;i<120;i++){
+        confetti.push({
+            x:Math.random()*canvas.width,
+            y:Math.random()*canvas.height-canvas.height,
+            size:Math.random()*8+3,
+            speed:Math.random()*3+2,
+            color:`hsl(${Math.random()*360},80%,60%)`
+        });
+    }
+}
+
+function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    confetti.forEach(c=>{
+        ctx.fillStyle=c.color;
+        ctx.fillRect(c.x,c.y,c.size,c.size);
+        c.y+=c.speed;
+    });
+    confetti=confetti.filter(c=>c.y<canvas.height);
+    if(confetti.length>0) requestAnimationFrame(draw);
+}
+
+document.getElementById("yesBtn").onclick=()=>{
+    createConfetti();
+    draw();
+};
+</script>
+
+</body>
+</html>
